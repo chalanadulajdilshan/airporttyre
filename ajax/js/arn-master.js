@@ -280,7 +280,7 @@ jQuery(document).ready(function () {
     });
 
 
-    function calculatePayment() {
+    function calculatePayment(skipActualCost = false) {
         const recQty = parseFloat($('#rec_quantity').val()) || 0;
         const list_price = parseFloat($('#list_price').val()) || 0;
     
@@ -293,34 +293,57 @@ jQuery(document).ready(function () {
         const dis7 = parseFloat($('#dis_7').val()) || 0;
         const dis8 = parseFloat($('#dis_8').val()) || 0;
     
-        // Calculate discounts step by step
-        let disAmount2 = list_price * (dis2 / 100);
-        let disAmount3 = (list_price - disAmount2) * (dis3 / 100);
-        let disAmount4 = (list_price - disAmount2 - disAmount3) * (dis4 / 100);
-        let disAmount5 = (list_price - disAmount2 - disAmount3 - disAmount4) * (dis5 / 100);
-        let disAmount6 = (list_price - disAmount2 - disAmount3 - disAmount4 - disAmount5) * (dis6 / 100);
-        let disAmount7 = (list_price - disAmount2 - disAmount3 - disAmount4 - disAmount5 - disAmount6) * (dis7 / 100);
-        let disAmount8 = (list_price - disAmount2 - disAmount3 - disAmount4 - disAmount5 - disAmount6 - disAmount7) * (dis8 / 100);
-    
-        let finalCost = list_price - disAmount2 - disAmount3 - disAmount4 - disAmount5 - disAmount6 - disAmount7 - disAmount8;
+        let finalCost;
+        
+        if (skipActualCost) {
+            // Use the manually entered actual cost
+            finalCost = parseFloat($('#actual_cost').val()) || 0;
+        } else {
+            // Calculate discounts step by step
+            let disAmount2 = list_price * (dis2 / 100);
+            let disAmount3 = (list_price - disAmount2) * (dis3 / 100);
+            let disAmount4 = (list_price - disAmount2 - disAmount3) * (dis4 / 100);
+            let disAmount5 = (list_price - disAmount2 - disAmount3 - disAmount4) * (dis5 / 100);
+            let disAmount6 = (list_price - disAmount2 - disAmount3 - disAmount4 - disAmount5) * (dis6 / 100);
+            let disAmount7 = (list_price - disAmount2 - disAmount3 - disAmount4 - disAmount5 - disAmount6) * (dis7 / 100);
+            let disAmount8 = (list_price - disAmount2 - disAmount3 - disAmount4 - disAmount5 - disAmount6 - disAmount7) * (dis8 / 100);
+            
+            finalCost = list_price - disAmount2 - disAmount3 - disAmount4 - disAmount5 - disAmount6 - disAmount7 - disAmount8;
+            $('#actual_cost').val(finalCost.toFixed(2));
+        }
+        
         let unitTotal = finalCost * recQty;
-    
-        $('#actual_cost').val(finalCost.toFixed(2));
         $('#unit_total').val(unitTotal.toFixed(2));
     }
     
 
-    // Bind function to relevant input fields
-    $('#arn-item-table').on('input', '#list_price,#rec_quantity, #actual_cost,#dis_3,#dis_4,#dis_5', calculatePayment);
+    // Bind function to relevant input fields (excluding actual_cost to prevent circular updates)
+    $('#arn-item-table').on('input', '#list_price,#rec_quantity,#dis_3,#dis_4,#dis_5', calculatePayment);
 
-    // When actual_cost is edited, auto-adjust item discount (dis_2)
+    // When actual_cost is edited manually, calculate unit total and update discount
     $('#actual_cost').on('input', function() {
         const listPrice = parseFloat($('#list_price').val()) || 0;
         const actualCost = parseFloat($(this).val()) || 0;
+        
+        // Validate that actual cost doesn't exceed list price
+        if (listPrice > 0 && actualCost > listPrice) {
+            $(this).addClass('is-invalid');
+            // Show warning but don't prevent input (user might be typing)
+            if ($(this).val().length > 0) {
+                $(this).attr('title', 'Actual Cost cannot exceed List Price (' + listPrice.toFixed(2) + ')');
+            }
+        } else {
+            $(this).removeClass('is-invalid');
+            $(this).removeAttr('title');
+        }
+        
+        // Calculate unit total with manually entered actual cost
+        calculatePayment(true);
+        
+        // Auto-adjust item discount (dis_2) based on actual cost
         if (listPrice > 0 && actualCost <= listPrice) {
             const discount = ((listPrice - actualCost) / listPrice) * 100;
             $('#dis_2').val(discount.toFixed(2));
-            calculatePayment();
         }
     });
 
@@ -903,7 +926,7 @@ jQuery(document).ready(function () {
             const cols = $row.find('td');
             const itemId = $row.attr('data-itemid');
     
-            const actualCost = parseFloat($(cols[7]).find('input').val()) || 0;
+            const actualCost = parseFloat($(cols[9]).find('input').val()) || 0;
             const listPrice = parseFloat($(cols[3]).find('input').val()) || 0;
  
             // Validation: actualCost should not exceed listPrice
