@@ -241,4 +241,9 @@ jQuery(document).ready(function () {
         $("#update").show();
         $(".bs-example-modal-xl").modal("hide"); // Close the modal
     });
+
+    // Convert name input to uppercase
+    $('#name').on('input', function() {
+        $(this).val($(this).val().toUpperCase());
+    });
 });

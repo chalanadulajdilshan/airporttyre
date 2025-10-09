@@ -104,12 +104,10 @@ if (isset($_POST['create'])) {
     $ITEM->re_order_qty = $_POST['re_order_qty'];
     $ITEM->stock_type = $_POST['stock_type'];
     $ITEM->note = $_POST['note'];
-    $ITEM->discount = $_POST['discount'];
     $ITEM->is_active = isset($_POST['is_active']) ? 1 : 0; //  
 
     // Attempt to create the item
     $res = $ITEM->create();
-
 
     //audit log
     $AUDIT_LOG = new AuditLog(NUll);
@@ -121,10 +119,6 @@ if (isset($_POST['create'])) {
     $AUDIT_LOG->created_at = date("Y-m-d H:i:s");
     $AUDIT_LOG->create();
 
-    $DOCUMENT_TRACKING = new DocumentTracking(null);
-    $DOCUMENT_TRACKING->incrementDocumentId('item');
-
-
     if ($res) {
         $result = [
             "status" => 'success'
@@ -132,9 +126,21 @@ if (isset($_POST['create'])) {
         echo json_encode($result);
         exit();
     } else {
-        $result = [
-            "status" => 'error'
-        ];
+        // Check if it's a duplicate error
+        $db = new Database();
+        $escapedName = mysqli_real_escape_string($db->DB_CON, $_POST['name']);
+        $checkQuery = "SELECT id FROM item_master WHERE UPPER(TRIM(name)) = UPPER(TRIM('$escapedName')) LIMIT 1";
+        $checkResult = $db->readQuery($checkQuery);
+        if (mysqli_num_rows($checkResult) > 0) {
+            $result = [
+                "status" => 'error',
+                "message" => 'Duplicate item name found. Item name already exists.'
+            ];
+        } else {
+            $result = [
+                "status" => 'error'
+            ];
+        }
         echo json_encode($result);
         exit();
     }
@@ -183,9 +189,21 @@ if (isset($_POST['update'])) {
         echo json_encode($result);
         exit();
     } else {
-        $result = [
-            "status" => 'error'
-        ];
+        // Check if it's a duplicate error
+        $db = new Database();
+        $escapedName = mysqli_real_escape_string($db->DB_CON, $_POST['name']);
+        $checkQuery = "SELECT id FROM item_master WHERE UPPER(TRIM(name)) = UPPER(TRIM('$escapedName')) AND id != '{$_POST['item_id']}' LIMIT 1";
+        $checkResult = $db->readQuery($checkQuery);
+        if (mysqli_num_rows($checkResult) > 0) {
+            $result = [
+                "status" => 'error',
+                "message" => 'Duplicate item name found. Item name already exists.'
+            ];
+        } else {
+            $result = [
+                "status" => 'error'
+            ];
+        }
         echo json_encode($result);
         exit();
     }
