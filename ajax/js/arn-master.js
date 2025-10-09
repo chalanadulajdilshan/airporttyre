@@ -43,6 +43,9 @@ jQuery(document).ready(function () {
             $('#payment_type').closest('.col-md-2').find('span.text-danger').hide();
             $('#payment_type').val(''); // Clear payment type
 
+            // Hide payment button for company ARN adjust
+            $('#payment').hide();
+
             // Show save button for company ARN adjust
             $('#create_arn').show();
             toggleRecQtyNegative(true);
@@ -227,8 +230,10 @@ jQuery(document).ready(function () {
 
     $('#payment_type').change(function () {
         const paymentType = $(this).val();
-        if (paymentType === 'Cash') {
+        const isCompanyARN = $('#company_arn_adjust').is(':checked');
+        if (paymentType === 'Cash' && !isCompanyARN) {
             $('#payment').show();
+            $('#create_arn').hide();
         } else {
             $('#payment').hide();
             $('#create_arn').show();
@@ -307,6 +312,17 @@ jQuery(document).ready(function () {
 
     // Bind function to relevant input fields
     $('#arn-item-table').on('input', '#list_price,#rec_quantity, #actual_cost,#dis_3,#dis_4,#dis_5', calculatePayment);
+
+    // When actual_cost is edited, auto-adjust item discount (dis_2)
+    $('#actual_cost').on('input', function() {
+        const listPrice = parseFloat($('#list_price').val()) || 0;
+        const actualCost = parseFloat($(this).val()) || 0;
+        if (listPrice > 0 && actualCost <= listPrice) {
+            const discount = ((listPrice - actualCost) / listPrice) * 100;
+            $('#dis_2').val(discount.toFixed(2));
+            calculatePayment();
+        }
+    });
 
 
     $('#addItemBtn').on('click', function () {

@@ -10,7 +10,7 @@ if (isset($_POST['create'])) {
 
     // Set the brand category details
     $BRAND_CATEGORY->code = $_POST['code'];
-    $BRAND_CATEGORY->name = $_POST['name'];
+    $BRAND_CATEGORY->name = strtoupper($_POST['name']);
 
 
     // Attempt to create the brand category
@@ -38,7 +38,7 @@ if (isset($_POST['update'])) {
 
     // Update brand category details
     $BRAND_CATEGORY->code = $_POST['code'];
-    $BRAND_CATEGORY->name = $_POST['name'];
+    $BRAND_CATEGORY->name = strtoupper($_POST['name']);
 
     // Attempt to update the brand category
     $result = $BRAND_CATEGORY->update();

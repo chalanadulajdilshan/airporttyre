@@ -323,13 +323,23 @@ jQuery(document).ready(function () {
                         }, 2000);
 
                     } else if (result.status === 'error') {
-                        swal({
-                            title: "Error!",
-                            text: "Something went wrong.",
-                            type: 'error',
-                            timer: 2000,
-                            showConfirmButton: false
-                        });
+                        if (result.message) {
+                            swal({
+                                title: "Error!",
+                                text: result.message,
+                                type: 'error',
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            swal({
+                                title: "Error!",
+                                text: "Something went wrong.",
+                                type: 'error',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        }
                     }
                 }
             });
@@ -434,13 +444,23 @@ jQuery(document).ready(function () {
                         }, 2000);
 
                     } else if (result.status === 'error') {
-                        swal({
-                            title: "Error!",
-                            text: "Something went wrong.",
-                            type: 'error',
-                            timer: 2000,
-                            showConfirmButton: false
-                        });
+                        if (result.message) {
+                            swal({
+                                title: "Error!",
+                                text: result.message,
+                                type: 'error',
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            swal({
+                                title: "Error!",
+                                text: "Something went wrong.",
+                                type: 'error',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        }
                     }
                 }
             });

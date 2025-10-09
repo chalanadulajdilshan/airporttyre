@@ -50,6 +50,15 @@ class ItemMaster
 
     public function create()
     {
+        // Check for duplicate item name (case-insensitive)
+        $db = new Database();
+        $escapedName = mysqli_real_escape_string($db->DB_CON, $this->name);
+        $checkQuery = "SELECT id FROM `item_master` WHERE UPPER(TRIM(`name`)) = UPPER(TRIM('$escapedName')) LIMIT 1";
+        $checkResult = $db->readQuery($checkQuery);
+        if (mysqli_num_rows($checkResult) > 0) {
+            return false; // Duplicate found
+        }
+
         $query = "INSERT INTO `item_master` (
     `code`, `name`, `brand`, `size`, `pattern`, `group`, `category`, 
      `re_order_level`, `re_order_qty`, `stock_type`, `note`,`list_price`,`invoice_price`,`discount`, `is_active`
@@ -59,9 +68,6 @@ class ItemMaster
      '$this->stock_type', '$this->note', '$this->list_price', '$this->invoice_price', '$this->discount', '$this->is_active'
 )";
 
-
-
-        $db = new Database();
         $result = $db->readQuery($query);
 
         if ($result) {
@@ -73,6 +79,15 @@ class ItemMaster
 
     public function update()
     {
+        // Check for duplicate item name (case-insensitive), excluding current item
+        $db = new Database();
+        $escapedName = mysqli_real_escape_string($db->DB_CON, $this->name);
+        $checkQuery = "SELECT id FROM `item_master` WHERE UPPER(TRIM(`name`)) = UPPER(TRIM('$escapedName')) AND id != '$this->id' LIMIT 1";
+        $checkResult = $db->readQuery($checkQuery);
+        if (mysqli_num_rows($checkResult) > 0) {
+            return false; // Duplicate found
+        }
+
         $query = "UPDATE `item_master` SET 
             `code` = '$this->code', 
             `name` = '$this->name', 
@@ -92,7 +107,6 @@ class ItemMaster
             WHERE `id` = '$this->id'";
 
 
-        $db = new Database();
         $result = $db->readQuery($query);
 
         if ($result) {
