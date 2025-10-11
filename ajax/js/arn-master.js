@@ -309,6 +309,14 @@ jQuery(document).ready(function () {
             let disAmount8 = (list_price - disAmount2 - disAmount3 - disAmount4 - disAmount5 - disAmount6 - disAmount7) * (dis8 / 100);
             
             finalCost = list_price - disAmount2 - disAmount3 - disAmount4 - disAmount5 - disAmount6 - disAmount7 - disAmount8;
+            
+            // Debug logging (remove in production)
+            console.log('Discount calculation:', {
+                list_price, dis2, dis3, dis4, dis5, dis6, dis7, dis8,
+                disAmount2, disAmount3, disAmount4, disAmount5, disAmount6, disAmount7, disAmount8,
+                finalCost
+            });
+            
             $('#actual_cost').val(finalCost.toFixed(2));
         }
         
@@ -318,7 +326,19 @@ jQuery(document).ready(function () {
     
 
     // Bind function to relevant input fields (excluding actual_cost to prevent circular updates)
-    $('#arn-item-table').on('input', '#list_price,#rec_quantity,#dis_3,#dis_4,#dis_5', calculatePayment);
+    $('#arn-item-table').on('input', '#list_price,#rec_quantity,#dis_3,#dis_4,#dis_5,#invoice_price', function() {
+        calculatePayment();
+    });
+    
+    // Also bind to change event for better compatibility
+    $('#arn-item-table').on('change', '#list_price,#rec_quantity,#dis_3,#dis_4,#dis_5,#invoice_price', function() {
+        calculatePayment();
+    });
+    
+    // Bind to disabled fields separately (they need special handling)
+    $('#arn-item-table').on('input change', '#dis_1,#dis_2', function() {
+        calculatePayment();
+    });
 
     // When actual_cost is edited manually, calculate unit total and update discount
     $('#actual_cost').on('input', function() {

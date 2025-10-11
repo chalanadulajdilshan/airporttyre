@@ -402,56 +402,49 @@ $arn_id = $COMPANY_PROFILE_DETAILS->company_code . '/ARN/00/' . ($lastId + 1);
                                                     </div>
                                                 </div>
 
-
                                                 <div class="col-6 col-sm-4 col-md-2 col-lg-1">
-                                                    <label class="form-label">Rec Qty</label>
+                                                    <label class="form-label">Rec Qty</label>
                                                     <input type="number" class=" form-control form-control-sm"
-                                                        id="rec_quantity" oninput="calculatePayment(this)">
+                                                        id="rec_quantity">
                                                 </div>
-
-
 
                                                 <div class="col-6 col-sm-4 col-md-2 col-lg-1">
                                                     <label class="form-label">List Price</label>
                                                     <input type="text" id="list_price" name="list_price"
-                                                        class="form-control form-control-sm"
-                                                        oninput="calculatePayment()">
+                                                        class="form-control form-control-sm">
                                                 </div>
 
 
                                                 <div class="col-6 col-sm-4 col-md-2 col-lg-1">
                                                     <label class="form-label"> Brand Dis %</label>
                                                     <input type="number" id="dis_1" class="form-control form-control-sm"
-                                                        oninput="calculatePayment()" disabled>
+                                                        disabled>
                                                 </div>
 
 
                                                 <div class="col-6 col-sm-4 col-md-2 col-lg-1">
                                                     <label class="form-label">Item Dis %</label>
                                                     <input type="number" id="dis_2" class="form-control form-control-sm"
-                                                        oninput="calculatePayment()" disabled>
+                                                        disabled>
                                                 </div>
 
                                                 <!-- ────────── Second Line of Fields ────────── -->
                                                 <div class="col-6 col-sm-4 col-md-2 col-lg-1">
                                                     <label class="form-label">Dis 3 %</label>
-                                                    <input type="number" id="dis_3" class="form-control form-control-sm"
-                                                        oninput="calculatePayment()">
+                                                    <input type="number" id="dis_3" class="form-control form-control-sm">
                                                 </div>
                                                 <div class="col-6 col-sm-4 col-md-2 col-lg-1">
                                                     <label class="form-label">Dis 4 %</label>
-                                                    <input type="number" id="dis_4" class="form-control form-control-sm"
-                                                        oninput="calculatePayment()">
+                                                    <input type="number" id="dis_4" class="form-control form-control-sm">
                                                 </div>
                                                 <div class="col-6 col-sm-4 col-md-2 col-lg-1">
                                                     <label class="form-label">Dis 5 %</label>
-                                                    <input type="number" id="dis_5" class="form-control form-control-sm"
-                                                        oninput="calculatePayment()">
+                                                    <input type="number" id="dis_5" class="form-control form-control-sm">
                                                 </div>
 
-                                                <input type="hidden" id="dis_6" oninput="calculatePayment()">
-                                                <input type="hidden" id="dis_7" oninput="calculatePayment()">
-                                                <input type="hidden" id="dis_8" oninput="calculatePayment()">
+                                                <input type="hidden" id="dis_6">
+                                                <input type="hidden" id="dis_7">
+                                                <input type="hidden" id="dis_8">
 
                                                 <div class="col-6 col-sm-4 col-md-2 col-lg-1">
                                                     <label class="form-label">Actual Cost</label>
@@ -462,8 +455,7 @@ $arn_id = $COMPANY_PROFILE_DETAILS->company_code . '/ARN/00/' . ($lastId + 1);
                                                 <div class="col-6 col-sm-4 col-md-2 col-lg-1">
                                                     <label class="form-label">Selling Price</label>
                                                     <input type="text" id="invoice_price"
-                                                        class="form-control form-control-sm"
-                                                        oninput="calculatePayment()">
+                                                        class="form-control form-control-sm">
                                                 </div>
 
 
