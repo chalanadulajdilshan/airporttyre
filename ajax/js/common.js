@@ -617,7 +617,7 @@ jQuery(document).ready(function () {
       },
       dataType: "json",
       success: function (response) {
-        console.log("API Response:", response);
+       
 
         // Close the modal first
         $("#invoiceModal").modal("hide");
@@ -642,6 +642,7 @@ jQuery(document).ready(function () {
         // Set basic information
         $("#invoice_id").val(response.id || "");
         $("#invoice_no").val(response.invoice_no || "");
+        $("#invoice_date").val(response.invoice_date || "");
         $("#company_id")
           .val(response.company_id || "")
           .trigger("change");

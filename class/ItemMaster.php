@@ -50,15 +50,6 @@ class ItemMaster
 
     public function create()
     {
-        // Check for duplicate item name (case-insensitive)
-        $db = new Database();
-        $escapedName = mysqli_real_escape_string($db->DB_CON, $this->name);
-        $checkQuery = "SELECT id FROM `item_master` WHERE UPPER(TRIM(`name`)) = UPPER(TRIM('$escapedName')) LIMIT 1";
-        $checkResult = $db->readQuery($checkQuery);
-        if (mysqli_num_rows($checkResult) > 0) {
-            return false; // Duplicate found
-        }
-
         $query = "INSERT INTO `item_master` (
     `code`, `name`, `brand`, `size`, `pattern`, `group`, `category`, 
      `re_order_level`, `re_order_qty`, `stock_type`, `note`,`list_price`,`invoice_price`,`discount`, `is_active`
@@ -68,6 +59,9 @@ class ItemMaster
      '$this->stock_type', '$this->note', '$this->list_price', '$this->invoice_price', '$this->discount', '$this->is_active'
 )";
 
+
+
+        $db = new Database();
         $result = $db->readQuery($query);
 
         if ($result) {
@@ -79,15 +73,6 @@ class ItemMaster
 
     public function update()
     {
-        // Check for duplicate item name (case-insensitive), excluding current item
-        $db = new Database();
-        $escapedName = mysqli_real_escape_string($db->DB_CON, $this->name);
-        $checkQuery = "SELECT id FROM `item_master` WHERE UPPER(TRIM(`name`)) = UPPER(TRIM('$escapedName')) AND id != '$this->id' LIMIT 1";
-        $checkResult = $db->readQuery($checkQuery);
-        if (mysqli_num_rows($checkResult) > 0) {
-            return false; // Duplicate found
-        }
-
         $query = "UPDATE `item_master` SET 
             `code` = '$this->code', 
             `name` = '$this->name', 
@@ -107,6 +92,7 @@ class ItemMaster
             WHERE `id` = '$this->id'";
 
 
+        $db = new Database();
         $result = $db->readQuery($query);
 
         if ($result) {
@@ -157,21 +143,20 @@ class ItemMaster
         $conditions = [];
 
         if ((int) $category_id > 0) {
-            $conditions[] = "`category` = '" . (int) $category_id . "'";
+            $conditions[] = "`im`.`category` = '" . (int) $category_id . "'";
         }
 
         if ((int) $brand_id > 0) {
-            $conditions[] = "`brand` = '" . (int) $brand_id . "'";
+            $conditions[] = "`im`.`brand` = '" . (int) $brand_id . "'";
         }
 
         if ((int) $group_id > 0) {
-            $conditions[] = "`group` = '" . (int) $group_id . "'";
+            $conditions[] = "`im`.`group` = '" . (int) $group_id . "'";
         }
 
         if (!empty($item_code)) {
-            $conditions[] = "(`code` LIKE '%" . $item_code . "%' OR `name` LIKE '%" . $item_code . "%')";
+            $conditions[] = "(`im`.`code` LIKE '%" . $item_code . "%' OR `im`.`name` LIKE '%" . $item_code . "%')";
         }
-
         // Get the logged-in user's department ID from session
         $userDepartmentId = 0;
         if (isset($_SESSION['id'])) {
@@ -182,7 +167,7 @@ class ItemMaster
         // Join condition to filter by ARN department (stock_item_tmp) instead of stock_master
         $join = "";
         $effectiveDepartmentId = ((int) $department_id > 0) ? (int) $department_id : $userDepartmentId;
-        
+
         if ($effectiveDepartmentId > 0) {
             // Filter items that have ARNs in stock_item_tmp for this department with available quantity
             $join = "INNER JOIN stock_item_tmp sit ON sit.item_id = im.id 
@@ -191,6 +176,7 @@ class ItemMaster
             $join .= " INNER JOIN arn_master am ON sit.arn_id = am.id 
                       AND (am.is_cancelled IS NULL OR am.is_cancelled = 0)";
         }
+
 
         $where = "";
         if (count($conditions) > 0) {
@@ -224,7 +210,7 @@ class ItemMaster
                 // If no user department is set, include all (fallback for admin users)
                 $row['stock_tmp'] = $STOCK_TMP->getByItemId($row['id']);
             }
-            
+
             // Calculate total available quantity from ARN records (stock_item_tmp)
             $totalQty = 0;
             foreach ($row['stock_tmp'] as $tmpRow) {

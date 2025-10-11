@@ -91,14 +91,30 @@ jQuery(document).ready(function () {
   let itemsPerPage = 20;
 
   function loadItems(page = 1) {
+    // Hide any previous table (if needed)
     $("#serviceItemTable").hide();
-
+  
+    // Show a loading row in the table body
+    $("#itemMaster tbody").html(`
+      <tr>
+        <td colspan="8" class="text-center text-secondary py-3">
+          <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+          Loading items, please wait...
+        </td>
+      </tr>
+    `);
+  
+    // Clear old pagination
+    $("#itemPagination").empty();
+  
+    // Collect filters
     let brand_id = $("#item_brand_id").val();
     let category_id = $("#item_category_id").val();
     let group_id = $("#item_group_id").val();
     let department_id = $("#item_department_id").val();
     let item_code = $("#item_item_code").val().trim();
-
+  
+    // Perform AJAX
     $.ajax({
       url: "ajax/php/report.php",
       type: "POST",
@@ -113,16 +129,31 @@ jQuery(document).ready(function () {
       },
       success: function (data) {
         fullItemList = data || [];
-        renderPaginatedItems(page);
+  
+        if (fullItemList.length === 0) {
+          $("#itemMaster tbody").html(`
+            <tr>
+              <td colspan="8" class="text-center text-muted py-3">No items found</td>
+            </tr>
+          `);
+          $("#itemPagination").empty();
+        } else {
+          renderPaginatedItems(page);
+        }
       },
       error: function () {
-        $("#itemMaster tbody").html(
-          `<tr><td colspan="8" class="text-danger text-center">Error loading data</td></tr>`
-        );
+        $("#itemMaster tbody").html(`
+          <tr>
+            <td colspan="8" class="text-center text-danger py-3">
+              <i class="bi bi-exclamation-triangle me-2"></i> Error loading data
+            </td>
+          </tr>
+        `);
         $("#itemPagination").empty();
       },
     });
   }
+  
 
  
 
@@ -601,6 +632,7 @@ jQuery(document).ready(function () {
       itemMasterModal.hide();
     }
   });
+  
 
   $(document).on("click", "#all_itemMaster tbody tr", function () {
     let mainRow = $(this).closest("tr.table-primary"); // ✅ pick the clicked row
@@ -633,6 +665,9 @@ jQuery(document).ready(function () {
   });
 
   $(document).on("click", "#itemMaster tbody tr.table-info", function () {
+
+
+    
     // Get the main item row
     let mainRow = $(this).prevAll("tr.table-primary").first();
     let lastColValue = mainRow.find("td").last().text();
@@ -799,13 +834,59 @@ jQuery(document).ready(function () {
       return;
     }
 
-    $("#modal_invoice_id").val(invoiceId);
-    $("#modalFinalTotal").val(total.toFixed(2));
-    $("#amountPaid").val("");
-    $("#paymentType").val("1"); // Set default payment type to Cash (ID: 1)
+    const invoiceNo = $("#invoice_no").val().trim();
+    if (!invoiceNo) {
+      $("#invoice_no").focus();
+      return swal({
+        title: "Error!",
+        text: "Please enter an invoice number",
+        type: "error",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    }
 
-    $("#balanceAmount").val("0.00").removeClass("text-danger");
-    $("#paymentModal").modal("show");
+    $.ajax({
+      url: "ajax/php/sales-invoice.php",
+      method: "POST",
+      data: {
+        action: "check_invoice_id",
+        invoice_no: invoiceNo,
+      },
+      dataType: "json",
+      success: function (checkRes) {
+        if (checkRes.exists) {
+          $("#invoice_no").focus();
+          swal({
+            title: "Duplicate!",
+            text:
+              "Invoice No <strong>" + invoiceNo + "</strong> already exists.",
+            type: "error",
+            html: true,
+            timer: 2500,
+            showConfirmButton: false,
+          });
+          return;
+        }
+
+        $("#modal_invoice_id").val(invoiceId);
+        $("#modalFinalTotal").val(total.toFixed(2));
+        $("#amountPaid").val("");
+        $("#paymentType").val("1"); // Set default payment type to Cash (ID: 1)
+
+        $("#balanceAmount").val("0.00").removeClass("text-danger");
+        $("#paymentModal").modal("show");
+      },
+      error: function () {
+        swal({
+          title: "Error!",
+          text: "Unable to verify Invoice No. right now.",
+          type: "error",
+          timer: 3000,
+          showConfirmButton: false,
+        });
+      },
+    });
   });
 
   // CALCULATE AND DISPLAY BALANCE OR SHOW INSUFFICIENT MESSAGE
@@ -891,11 +972,20 @@ jQuery(document).ready(function () {
         showConfirmButton: false,
       });
       return;
-    }   
-    
-    
+    }
 
     const invoiceNo = $("#invoice_no").val().trim();
+    if (!invoiceNo) {
+      $("#invoice_no").focus();
+      return swal({
+        title: "Error!",
+        text: "Please enter an invoice number",
+        type: "error",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    }
+
     const dag_id = $("#dag_id").val();
 
     if (dag_id != 0) {
@@ -911,6 +1001,7 @@ jQuery(document).ready(function () {
         dataType: "json",
         success: function (checkRes) {
           if (checkRes.exists) {
+            $("#invoice_no").focus();
             swal({
               title: "Duplicate!",
               text:
