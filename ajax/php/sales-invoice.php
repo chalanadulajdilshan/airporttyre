@@ -156,13 +156,13 @@ if (isset($_POST['create'])) {
             //GET ARN ID BY ARN NO FIRST
             $ARN_MASTER = new ArnMaster(NULL);
             $arn_id = $ARN_MASTER->getArnIdByArnNo($item['arn_no']);
-
+            
             // Get the correct department_id for this ARN before saving item
             $db = new Database();
             $deptQuery = "SELECT department_id FROM stock_item_tmp WHERE arn_id = '{$arn_id}' AND item_id = '{$item['item_id']}' LIMIT 1";
             $deptResult = $db->readQuery($deptQuery);
             $correctDepartmentId = $_POST['department_id']; // fallback to form department
-
+            
             if ($deptRow = mysqli_fetch_assoc($deptResult)) {
                 $correctDepartmentId = $deptRow['department_id'];
             }
@@ -215,7 +215,7 @@ if (isset($_POST['create'])) {
             $STOCK_ITEM_TMP = new StockItemTmp(NULL);
             // Use negative qty to reduce stock
             $qtyToDeduct = -abs($qty_for_stock); // Use correct quantity for stock deduction
-
+            
             $STOCK_ITEM_TMP->updateQtyByArnId(
                 $arn_id,
                 $item['item_id'],
@@ -363,6 +363,15 @@ if (isset($_POST['action']) && $_POST['action'] == 'latest') {
 }
 
 
+if (isset($_POST['action']) && $_POST['action'] == 'search') {
+    $SALES_INVOICE = new SalesInvoice();
+    $invoices = $SALES_INVOICE->search($_POST['q']);
+
+    echo json_encode(["data" => $invoices]);
+    exit();
+}
+
+
 // Handle cancel invoice action
 // Check invoice status
 if (isset($_POST['action']) && $_POST['action'] == 'check_status') {
@@ -399,11 +408,11 @@ if (isset($_POST['action']) && $_POST['action'] == 'cancel') {
 
 
         foreach ($items as $item) {
-
+            
             // Extract ARN ID and Department from item_name
             $arnId = null;
             $arnDepartmentId = $SALES_INVOICE->department_id; // fallback to invoice department
-
+            
             if (strpos($item['item_name'], '|ARN:') !== false) {
                 preg_match('/\|ARN:(\d+)\|DEPT:(\d+)/', $item['item_name'], $matches);
                 if (isset($matches[1]) && isset($matches[2])) {
@@ -411,10 +420,10 @@ if (isset($_POST['action']) && $_POST['action'] == 'cancel') {
                     $arnDepartmentId = (int)$matches[2];
                 }
             }
-
+            
             if ($item['item_code'] != 0) {
                 $STOCK_MASTER = new StockMaster(NULL);
-
+                
                 // Add quantity back to the ARN's original department, not invoice department
                 $currentQty = $STOCK_MASTER->getAvailableQuantity($arnDepartmentId, $item['item_code']);
                 $newQty = $currentQty + $item['quantity'];
@@ -436,13 +445,15 @@ if (isset($_POST['action']) && $_POST['action'] == 'cancel') {
                     $qtyToAdd = abs($item['quantity']);
                     $STOCK_ITEM_TMP->updateQtyByArnId($arnId, $item['item_code'], $arnDepartmentId, $qtyToAdd);
                 }
-            } else {
+             
+            }else{
                 $SERVICE_ITEM = new ServiceItem($item['service_item_code']);
                 $currentQty = $SERVICE_ITEM->qty;
                 $newQty = $currentQty + $item['quantity'];
                 $SERVICE_ITEM->qty = $newQty;
                 $SERVICE_ITEM->update();
             }
+
         }
 
 
