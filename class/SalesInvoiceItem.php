@@ -9,6 +9,7 @@ class SalesInvoiceItem
     public $item_name;
     public $quantity;
     public $cost;
+    public $list_price;
     public $price;
     public $discount;
     public $total;
@@ -35,6 +36,7 @@ class SalesInvoiceItem
                 $this->quantity = $result['quantity'];
                 $this->discount = $result['discount'];
                 $this->cost = $result['cost'];
+                $this->list_price = $result['list_price'] ?? $result['price']; // Fallback for existing records
                 $this->price = $result['price'];
                 $this->total = $result['total'];
                 $this->vehicle_no = $result['vehicle_no'] ?? '';
@@ -50,13 +52,14 @@ class SalesInvoiceItem
 
 
         $query = "INSERT INTO `sales_invoice_items` 
-    (`invoice_id`, `item_code`, `service_item_code`, `item_name`,`cost`, `price`, `discount`,`quantity`, `total`, `vehicle_no`, `current_km`, `next_service_date`, `created_at`) 
+    (`invoice_id`, `item_code`, `service_item_code`, `item_name`,`cost`, `list_price`, `price`, `discount`,`quantity`, `total`, `vehicle_no`, `current_km`, `next_service_date`, `created_at`) 
     VALUES (
         '{$this->invoice_id}', 
         '{$this->item_code}', 
         '{$this->service_item_code}', 
         '{$this->item_name}', 
         '{$this->cost}', 
+        '{$this->list_price}', 
         '{$this->price}', 
         '{$this->discount}', 
         '{$this->quantity}', 
@@ -146,36 +149,36 @@ class SalesInvoiceItem
                   FROM `sales_invoice_items` 
                   WHERE `invoice_id` = $invoice_id 
                   ORDER BY `id` DESC";
-    
+
         $db = new Database();
         $result = $db->readQuery($query);
         $array_res = array();
-    
+
         while ($row = mysqli_fetch_assoc($result)) {
             // safely load item master
-            if ($row['item_code'] !=0) {
+            if ($row['item_code'] != 0) {
                 $item_master = new ItemMaster($row['item_code']);
                 $row['item_code_name'] = $item_master->code ?? '';
             } else {
-                 $service_item_master = new ServiceItem($row['service_item_code']);
-                 $row['item_code_name'] = $service_item_master->item_code ?? '';
+                $service_item_master = new ServiceItem($row['service_item_code']);
+                $row['item_code_name'] = $service_item_master->item_code ?? '';
             }
-            
+
             // Extract clean item name for display (remove ARN metadata)
             $row['display_name'] = $this->extractCleanItemName($row['item_name']);
-            
+
             // Add vehicle no and current km to display name if they exist
             if (!empty($row['vehicle_no']) || !empty($row['current_km'])) {
                 $vehicleInfo = ' [' . ($row['vehicle_no'] ?: 'N/A') . ' - ' . ($row['current_km'] ?: 'N/A') . ' KM]';
                 $row['display_name'] .= $vehicleInfo;
             }
-    
+
             $array_res[] = $row; // push AFTER adding new field
         }
-    
+
         return $array_res;
     }
-    
+
     // Helper method to extract clean item name without ARN metadata
     private function extractCleanItemName($itemName)
     {
@@ -185,8 +188,4 @@ class SalesInvoiceItem
         }
         return $itemName;
     }
-    
-
-
-
 }

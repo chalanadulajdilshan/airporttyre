@@ -156,13 +156,13 @@ if (isset($_POST['create'])) {
             //GET ARN ID BY ARN NO FIRST
             $ARN_MASTER = new ArnMaster(NULL);
             $arn_id = $ARN_MASTER->getArnIdByArnNo($item['arn_no']);
-            
+
             // Get the correct department_id for this ARN before saving item
             $db = new Database();
             $deptQuery = "SELECT department_id FROM stock_item_tmp WHERE arn_id = '{$arn_id}' AND item_id = '{$item['item_id']}' LIMIT 1";
             $deptResult = $db->readQuery($deptQuery);
             $correctDepartmentId = $_POST['department_id']; // fallback to form department
-            
+
             if ($deptRow = mysqli_fetch_assoc($deptResult)) {
                 $correctDepartmentId = $deptRow['department_id'];
             }
@@ -185,14 +185,15 @@ if (isset($_POST['create'])) {
                 $qty_for_stock = $item['service_qty']; // Use service_qty for stock management
             }
 
-            $item_discount_amount = ($item['selling_price'] * $qty_for_total) * $item_discount_percentage / 100;
+            $item_discount_amount = ($item['price'] * $qty_for_total) * $item_discount_percentage / 100;
 
             // Store item name with ARN ID and department for cancellation tracking
             $SALES_ITEM->item_name = $item['name'] . '|ARN:' . $arn_id . '|DEPT:' . $correctDepartmentId;
-            $SALES_ITEM->price = $item['selling_price'];
+            $SALES_ITEM->list_price = $item['price']; // Save the original list price
+            $SALES_ITEM->price = $item['selling_price']; // Save the actual selling price (price after discount per unit)
             $SALES_ITEM->cost = $item['cost']; // Set the cost field
             $SALES_ITEM->discount = $item_discount_amount;
-            $SALES_ITEM->total = ($item['selling_price'] * $qty_for_total) - $item_discount_amount;
+            $SALES_ITEM->total = ($item['selling_price'] * $qty_for_total);
             $SALES_ITEM->vehicle_no = isset($item['vehicle_no']) ? $item['vehicle_no'] : '';
             $SALES_ITEM->current_km = isset($item['current_km']) ? $item['current_km'] : '';
             $SALES_ITEM->next_service_date = (isset($item['next_service_days']) && !empty($item['next_service_days']) && intval($item['next_service_days']) > 0) ? date('Y-m-d', strtotime($SALES_INVOICE->invoice_date . ' + ' . $item['next_service_days'] . ' days')) : null;
@@ -214,7 +215,7 @@ if (isset($_POST['create'])) {
             $STOCK_ITEM_TMP = new StockItemTmp(NULL);
             // Use negative qty to reduce stock
             $qtyToDeduct = -abs($qty_for_stock); // Use correct quantity for stock deduction
-            
+
             $STOCK_ITEM_TMP->updateQtyByArnId(
                 $arn_id,
                 $item['item_id'],
@@ -398,11 +399,11 @@ if (isset($_POST['action']) && $_POST['action'] == 'cancel') {
 
 
         foreach ($items as $item) {
-            
+
             // Extract ARN ID and Department from item_name
             $arnId = null;
             $arnDepartmentId = $SALES_INVOICE->department_id; // fallback to invoice department
-            
+
             if (strpos($item['item_name'], '|ARN:') !== false) {
                 preg_match('/\|ARN:(\d+)\|DEPT:(\d+)/', $item['item_name'], $matches);
                 if (isset($matches[1]) && isset($matches[2])) {
@@ -410,10 +411,10 @@ if (isset($_POST['action']) && $_POST['action'] == 'cancel') {
                     $arnDepartmentId = (int)$matches[2];
                 }
             }
-            
+
             if ($item['item_code'] != 0) {
                 $STOCK_MASTER = new StockMaster(NULL);
-                
+
                 // Add quantity back to the ARN's original department, not invoice department
                 $currentQty = $STOCK_MASTER->getAvailableQuantity($arnDepartmentId, $item['item_code']);
                 $newQty = $currentQty + $item['quantity'];
@@ -435,15 +436,13 @@ if (isset($_POST['action']) && $_POST['action'] == 'cancel') {
                     $qtyToAdd = abs($item['quantity']);
                     $STOCK_ITEM_TMP->updateQtyByArnId($arnId, $item['item_code'], $arnDepartmentId, $qtyToAdd);
                 }
-             
-            }else{
+            } else {
                 $SERVICE_ITEM = new ServiceItem($item['service_item_code']);
                 $currentQty = $SERVICE_ITEM->qty;
                 $newQty = $currentQty + $item['quantity'];
                 $SERVICE_ITEM->qty = $newQty;
                 $SERVICE_ITEM->update();
             }
-
         }
 
 

@@ -4,14 +4,29 @@ header('Content-Type: application/json; charset=UTF-8');
 
 $data = json_decode(file_get_contents("php://input"), true);
 
+// ---------- Check BL No Exists ----------
+if (isset($_POST['check_bl_no'])) {
+    $bl_no = trim($_POST['check_bl_no']);
+    if (empty($bl_no)) {
+        echo json_encode(['status' => 'not_exists']);
+        exit();
+    }
+
+    $ARN = new ArnMaster(NULL);
+    $exists = $ARN->isBlNoExists($bl_no);
+
+    echo json_encode(['status' => $exists ? 'exists' : 'not_exists']);
+    exit();
+}
+
 // ---------- Create ARN ----------
 if (isset($data['create'])) {
     // Check if this is a company ARN adjust
     $isCompanyArnAdjust = isset($data['company_arn_adjust']) && $data['company_arn_adjust'] === true;
-    
+
     // 1. Collect master data
     $ARN = new ArnMaster(NULL);
-    
+
     // Handle ARN number for company ARN adjust
     if ($isCompanyArnAdjust) {
         // For company ARN adjust, append company name from session to ARN number
@@ -20,7 +35,7 @@ if (isset($data['create'])) {
     } else {
         $ARN->arn_no = $data['arn_no'];
     }
-    
+
     // Handle special company ARN adjust supplier
     if ($data['supplier'] === 'COMPANY_ARN_ADJUST') {
         // For company ARN adjust, use a special supplier handling
@@ -51,7 +66,7 @@ if (isset($data['create'])) {
     $ARN->department = $data['department_id'];
     $ARN->po_no = $data['purchase_order_id'];
     $ARN->po_date = $data['purchase_date'];
-    
+
     // Set paid amount to 0 for company ARN adjust (no payment)
     $ARN->paid_amount = '0';
 
@@ -175,7 +190,7 @@ if (isset($data['create'])) {
             }
         }
 
-        echo json_encode(["status" => 'success' , "arn_id" => $arn_id,"supplier_id" => $ARN->supplier_id ]);
+        echo json_encode(["status" => 'success', "arn_id" => $arn_id, "supplier_id" => $ARN->supplier_id]);
     } else {
         echo json_encode(["status" => 'error', "message" => "Failed to create ARN master."]);
     }
@@ -226,22 +241,20 @@ if (isset($_POST['brand_id'], $_POST['category_id'])) {
 
     $brandWiseDis = new BrandWiseDis();
     $discounts = $brandWiseDis->getByBrand($brandId, $categoryId);
-    
+
     $discount_01 = 0;
     $discount_02 = 0;
     $discount_03 = 0;
-    
+
     if (!empty($discounts)) {
         $row = $discounts[0]; // first matching record
         $discount_01 = isset($row['discount_percent_01']) ? (float)$row['discount_percent_01'] : 0;
         $discount_02 = isset($row['discount_percent_02']) ? (float)$row['discount_percent_02'] : 0;
         $discount_03 = isset($row['discount_percent_03']) ? (float)$row['discount_percent_03'] : 0;
     }
-    
+
     $total_discount = $discount_01 + $discount_02 + $discount_03;
-  
+
     echo json_encode(['discount_01' => $discount_01, 'discount_02' => $discount_02, 'discount_03' => $discount_03, 'total_discount' => $total_discount]);
     exit();
 }
-
-
