@@ -68,8 +68,33 @@ class ArnMaster
         return false;
     }
 
+    public function isBlNoExists($bl_no, $exclude_id = null)
+    {
+        if (empty($bl_no)) {
+            return false;
+        }
+
+        $db = new Database();
+        $bl_no = $db->escapeString($bl_no);
+
+        $query = "SELECT `id` FROM `arn_master` WHERE `bl_no` = '{$bl_no}'";
+        if ($exclude_id) {
+            $query .= " AND `id` != '{$exclude_id}'";
+        }
+        $query .= " LIMIT 1";
+
+        $result = $db->readQuery($query);
+
+        return ($result && mysqli_num_rows($result) > 0);
+    }
+
     public function create()
     {
+        // Check if bl_no already exists
+        if ($this->isBlNoExists($this->bl_no)) {
+            return false; // Duplicate bl_no
+        }
+
         $query = "INSERT INTO `arn_master` (
             `arn_no`, `lc_tt_no`, `pi_no`, `po_date`, `supplier_id`, `ci_no`, `bl_no`,
             `container_size`, `category`, `brand`, `department`, `po_no`, `country`, `order_by`,
@@ -93,6 +118,11 @@ class ArnMaster
 
     public function update()
     {
+        // Check if bl_no is being changed and if it already exists
+        if ($this->isBlNoExists($this->bl_no, $this->id)) {
+            return false; // Duplicate bl_no
+        }
+
         $query = "UPDATE `arn_master` SET
             `arn_no` = '{$this->arn_no}',
             `lc_tt_no` = '{$this->lc_tt_no}',

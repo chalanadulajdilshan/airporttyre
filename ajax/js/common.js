@@ -554,11 +554,12 @@ jQuery(document).ready(function () {
 
         if (response && response.length > 0) {
           response.forEach((item) => {
+            const discountValue = parseFloat(item.discount) || 0;
             let row = `
                             <tr>
                                 <td>${item.item_code_name}</td>
                                 <td>${item.item_name}</td>
-                                <td>${parseFloat(item.price).toLocaleString(
+                                <td>${parseFloat(item.list_price || item.price).toLocaleString(
                                   undefined,
                                   {
                                     minimumFractionDigits: 2,
@@ -566,7 +567,7 @@ jQuery(document).ready(function () {
                                   }
                                 )}</td>
                                 <td>${item.quantity}</td>
-                                <td>${item.discount}%</td>
+                                <td>${discountValue}</td>
                                 <td>${parseFloat(item.price).toLocaleString(
                                   undefined,
                                   {

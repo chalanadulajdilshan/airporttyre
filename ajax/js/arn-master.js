@@ -892,6 +892,45 @@ jQuery(document).ready(function () {
             });
         }
 
+        // Validate bl_no is not empty
+        const blNo = $('#bl_no').val().trim();
+        if (!blNo) {
+            return swal({
+                title: "Error!",
+                text: "Please enter Invoice No",
+                type: "error",
+                timer: 2000,
+                showConfirmButton: false,
+            });
+        }
+
+        // Check if bl_no already exists
+        let blNoExists = false;
+        $.ajax({
+            url: "ajax/php/arn-master.php",
+            type: "POST",
+            data: { check_bl_no: blNo },
+            async: false,
+            success: function(response) {
+                if (response.status === 'exists') {
+                    blNoExists = true;
+                }
+            },
+            error: function() {
+                blNoExists = true; // Assume exists on error to be safe
+            }
+        });
+
+        if (blNoExists) {
+            return swal({
+                title: "Error!",
+                text: "Invoice No already exists. Please enter a unique Invoice No",
+                type: "error",
+                timer: 3000,
+                showConfirmButton: false,
+            });
+        }
+
         // Check if company ARN adjust is enabled
         const isCompanyArnAdjust = $('#company_arn_adjust').is(':checked');
         
