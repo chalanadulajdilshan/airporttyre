@@ -396,6 +396,679 @@ jQuery(document).ready(function () {
         }
     });
 
+    // Export functionality
+  $("#exportToExcel, #exportToPdf").on("click", function () {
+    const buttonText = $(this).text().trim();
+    const isExcelExport = buttonText === "Export to Excel";
+    const isPdfExport = buttonText === "Export to PDF";
+
+    // Show loading state
+    const originalText = $(this).html();
+    $(this).html(
+      '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Exporting...'
+    );
+    $(this).prop("disabled", true);
+
+    // Get current filter values
+    const departmentId = $("#filter_department_id").val();
+
+    // Make AJAX request for export data
+    $.ajax({
+      url: "ajax/php/item-master.php",
+      type: "POST",
+      dataType: "json",
+      data: {
+        action: "export_stock",
+        department_id: departmentId,
+        status: 1,
+        stock_only: 1,
+      },
+      success: function (response) {
+        if (response && response.status === "success") {
+          const data = response.data;
+
+          if (data && data.length > 0) {
+            if (isPdfExport) {
+              exportToPdf(data, departmentId);
+            } else if (isExcelExport) {
+              exportToExcel(data, departmentId);
+            }
+          } else {
+            showAlert("No data available for export", "warning");
+          }
+        } else {
+          showAlert(
+            "Failed to retrieve export data: " +
+              (response.message || "Unknown error"),
+            "error"
+          );
+        }
+      },
+      error: function (xhr, status, error) {
+        showAlert("Export failed: " + error, "error");
+      },
+      complete: function () {
+        // Restore button state
+        $("#exportAllStock, #exportToExcel, #exportToPdf").each(function () {
+          const btn = $(this);
+          const text =
+            btn.attr("id") === "exportAllStock"
+              ? "Export All Stock"
+              : btn.attr("id") === "exportToExcel"
+              ? "Export to Excel"
+              : "Export to PDF";
+          btn.html(text);
+          btn.prop("disabled", false);
+        });
+      },
+    });
+  });
+
+  // Function to export data to Excel (CSV format that opens in Excel)
+  function exportToExcel(data, departmentId) {
+    const deptName =
+      departmentId === "all"
+        ? "All Departments"
+        : $("#filter_department_id option:selected").text();
+
+    let html = `
+  <html xmlns:x="urn:schemas-microsoft-com:office:excel">
+  <head>
+    <meta charset="UTF-8">
+    <title>Stock Report - ${deptName}</title>
+    <style>
+      @page { margin: 20px; }
+      body { 
+        font-family: 'Arial', sans-serif; 
+        margin: 0;
+        padding: 0;
+        color: #333;
+        line-height: 1.4;
+      }
+      .header { 
+        text-align: center; 
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #eee;
+      }
+      .header h1 { 
+        margin: 0 0 10px 0; 
+        color: #2c3e50;
+        font-size: 24px;
+      }
+      .header p { 
+        margin: 5px 0; 
+        color: #7f8c8d;
+        font-size: 14px;
+      }
+      table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        margin: 15px 0;
+        font-size: 13px;
+      }
+      th, td { 
+        border: 1px solid #e0e0e0; 
+        padding: 10px 12px; 
+        text-align: left; 
+        vertical-align: top;
+      }
+      thead th {
+        background-color: #f8f9fa;
+        color: #2c3e50;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 12px;
+        padding: 12px;
+      }
+      .text-right { text-align: right; }
+      .text-center { text-align: center; }
+      .summary { 
+        margin: 30px 0; 
+        padding: 20px; 
+        background-color: #f8f9fa; 
+        border-radius: 4px;
+        border-left: 4px solid #3498db;
+      }
+      .arn-details { 
+        margin: 15px 0; 
+        padding: 12px 15px; 
+        background-color: #f8fafc; 
+        border-radius: 4px;
+        border-left: 3px solid #b8daff;
+      }
+      .arn-table { 
+        width: 100%; 
+        margin: 10px 0 5px 0;
+        font-size: 12px;
+      }
+      .arn-table thead th {
+        background-color: #e7f1ff;
+        color: #2c3e50;
+        font-size: 11px;
+        padding: 8px 10px;
+      }
+      .item-row { 
+        border-bottom: 2px solid #f1f1f1; 
+      }
+      .status-badge {
+        padding: 4px 8px; 
+        border-radius: 3px; 
+        font-size: 11px; 
+        font-weight: 500;
+        display: inline-block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Live Stock Report - ${deptName}</h1>
+      <p>Generated on ${new Date().toLocaleString()}</p>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Item Code</th>
+          <th>Description</th>
+          <th>Category</th>
+          <th class="text-right">Selling</th>
+          <th class="text-right">Invoice</th>
+          <th class="text-right">Qty</th>
+          <th class="text-center">Status</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+    data.forEach((item) => {
+      const statusStyle = {
+        "Out of Stock": { bg: "#fee2e2", color: "#991b1b" },
+        "Re-order": { bg: "#fef3c7", color: "#92400e" },
+        "In Stock": { bg: "#dcfce7", color: "#166534" },
+      }[item.stock_status] || { bg: "#f3f4f6", color: "#374151" };
+
+      html += `
+        <tr class="item-row">
+          <td><strong>${item.code || "-"}</strong></td>
+          <td>${item.name || "-"}</td>
+          <td>${item.category || "-"}</td>
+          <td class="text-right">${
+            item.list_price ? parseFloat(item.list_price).toFixed(2) : "0.00"
+          }</td>
+          <td class="text-right">${
+            item.invoice_price
+              ? parseFloat(item.invoice_price).toFixed(2)
+              : "0.00"
+          }</td>
+          <td class="text-right">${
+            item.quantity ? parseFloat(item.quantity).toFixed(2) : "0.00"
+          }</td>
+          <td class="text-center">
+            <span class="status-badge" style="background-color: ${
+              statusStyle.bg
+            }; color: ${statusStyle.color}">
+              ${item.stock_status || "-"}
+            </span>
+          </td>
+        </tr>`;
+
+      if (item.arn_lots && item.arn_lots.length > 0) {
+        html += `
+        <tr>
+          <td colspan="7" class="arn-details">
+            <strong>ARN Details:</strong>
+            <table class="arn-table">
+              <thead>
+                <tr>
+                  <th>ARN No</th>
+                  <th class="text-right">Cost</th>
+                  <th class="text-right">Qty</th>
+                  <th class="text-right">Total Cost</th>
+                  <th class="text-right">List Price</th>
+                  <th class="text-right">Invoice</th>
+                  <th class="text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody>`;
+
+        let totalQty = 0;
+        let totalValue = 0;
+
+        item.arn_lots.forEach((lot) => {
+          const cost = parseFloat(lot.cost || 0);
+          const qty = parseFloat(lot.qty || 0);
+          const listPrice = parseFloat(lot.list_price || 0);
+          const invoicePrice = parseFloat(lot.invoice_price || 0);
+          const totalCost = cost * qty;
+          const totalInvoice = invoicePrice * qty;
+
+          totalQty += qty;
+          totalValue += totalInvoice;
+
+          html += `
+                <tr>
+                  <td>${lot.arn_no || "-"}</td>
+                  <td class="text-right">${cost.toFixed(2)}</td>
+                  <td class="text-right">${qty.toFixed(2)}</td>
+                  <td class="text-right">${totalCost.toFixed(2)}</td>
+                  <td class="text-right">${listPrice.toFixed(2)}</td>
+                  <td class="text-right">${invoicePrice.toFixed(2)}</td>
+                  <td class="text-right"><strong>${totalInvoice.toFixed(
+                    2
+                  )}</strong></td>
+                </tr>`;
+        });
+
+        html += `
+                <tr style="background-color: #f8f9fa; font-weight: 500;">
+                  <td><strong>Total</strong></td>
+                  <td></td>
+                  <td class="text-right"><strong>${totalQty.toFixed(
+                    2
+                  )}</strong></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td class="text-right"><strong>${totalValue.toFixed(
+                    2
+                  )}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>`;
+      }
+    });
+
+    // Add summary section
+    const totalItems = data.length;
+    const totalQty = data.reduce(
+      (sum, item) => sum + parseFloat(item.quantity || 0),
+      0
+    );
+
+    html += `
+      </tbody>
+    </table>
+
+    <div class="summary">
+      <h3 style="margin-top: 0; color: #2c3e50;">Report Summary</h3>
+      <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px; margin: 5px 0;">
+          <div style="font-size: 13px; color: #7f8c8d;">Total Items</div>
+          <div style="font-size: 24px; font-weight: 600; color: #2c3e50;">${totalItems}</div>
+        </div>
+        <div style="flex: 1; min-width: 200px; margin: 5px 0;">
+          <div style="font-size: 13px; color: #7f8c8d;">Total Quantity</div>
+          <div style="font-size: 24px; font-weight: 600; color: #2c3e50;">
+            ${totalQty.toFixed(2)}
+          </div>
+        </div>
+        <div style="flex: 1; min-width: 200px; margin: 5px 0;">
+          <div style="font-size: 13px; color: #7f8c8d;">Report Generated</div>
+          <div style="font-size: 14px; font-weight: 500; color: #2c3e50;">${new Date().toLocaleString()}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 40px; padding-top: 20px; text-align: center; font-size: 11px; color: #7f8c8d; border-top: 1px solid #eee;">
+      <p>This report was generated by the Live Stock Management System</p>
+    </div>
+  </body>
+  </html>`;
+
+    // Convert HTML to Blob for Excel download
+    const blob = new Blob([html], {
+      type: "application/vnd.ms-excel;charset=utf-8;",
+    });
+
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+
+    const timestamp = new Date()
+      .toISOString()
+      .slice(0, 19)
+      .replace(/[:.]/g, "-");
+    link.download = `stock_report_${deptName.replace(
+      /\s+/g,
+      "_"
+    )}_${timestamp}.xls`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showAlert("Excel file downloaded successfully.", "success");
+  }
+
+  // Function to export data to PDF
+  function exportToPdf(data, departmentId) {
+    // Create HTML content for PDF
+    const deptName =
+      departmentId === "all"
+        ? "All Departments"
+        : $("#filter_department_id option:selected").text();
+
+    let html = `
+  <!DOCTYPE html>
+  <html>
+  <head>
+      <meta charset="utf-8">
+      <title>Stock Report - ${deptName}</title>
+      <style>
+          @page { margin: 20px; }
+          body { 
+              font-family: 'Arial', sans-serif; 
+              margin: 0;
+              padding: 0;
+              color: #333;
+              line-height: 1.4;
+          }
+          .header { 
+              text-align: center; 
+              margin-bottom: 30px;
+              padding-bottom: 15px;
+              border-bottom: 2px solid #eee;
+          }
+          .header h1 { 
+              margin: 0 0 10px 0; 
+              color: #2c3e50;
+              font-size: 24px;
+          }
+          .header p { 
+              margin: 5px 0; 
+              color: #7f8c8d;
+              font-size: 14px;
+          }
+          .report-title {
+              font-size: 18px;
+              font-weight: bold;
+              margin-bottom: 5px;
+          }
+          table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin: 15px 0;
+              font-size: 13px;
+              page-break-inside: auto;
+          }
+          th, td { 
+              border: 1px solid #e0e0e0; 
+              padding: 10px 12px; 
+              text-align: left; 
+              vertical-align: top;
+          }
+          thead th {
+              background-color: #f8f9fa;
+              color: #2c3e50;
+              font-weight: 600;
+              text-transform: uppercase;
+              font-size: 12px;
+              padding: 12px;
+          }
+          .text-right { text-align: right; }
+          .text-center { text-align: center; }
+          .summary { 
+              margin: 30px 0; 
+              padding: 20px; 
+              background-color: #f8f9fa; 
+              border-radius: 4px;
+              border-left: 4px solid #3498db;
+          }
+          .footer { 
+              margin-top: 40px; 
+              padding-top: 20px;
+              text-align: center; 
+              font-size: 11px; 
+              color: #7f8c8d;
+              border-top: 1px solid #eee;
+          }
+          .arn-details { 
+              margin: 15px 0; 
+              padding: 12px 15px; 
+              background-color: #f8fafc; 
+              border-radius: 4px;
+              border-left: 3px solid #b8daff;
+          }
+          .arn-table { 
+              width: 100%; 
+              margin: 10px 0 5px 0;
+              font-size: 12px;
+          }
+          .arn-table thead th {
+              background-color: #e7f1ff;
+              color: #2c3e50;
+              font-size: 11px;
+              padding: 8px 10px;
+          }
+          .arn-table td {
+              padding: 6px 10px;
+          }
+          .item-row { 
+              border-bottom: 2px solid #f1f1f1; 
+          }
+          .item-row:hover {
+              background-color: #f8f9fa;
+          }
+          .no-data {
+              color: #7f8c8d;
+              font-style: italic;
+              text-align: center;
+              padding: 20px;
+          }
+          .section-title {
+              font-size: 14px;
+              font-weight: 600;
+              color: #2c3e50;
+              margin: 5px 0;
+          }
+      </style>
+  </head>
+  <body>
+      <div class="header">
+          <div class="report-title">Live Stock Report - ${deptName}</div>
+          <p>Generated on ${new Date().toLocaleString()}</p>
+      </div>
+
+      <table>
+          <thead>
+              <tr>
+                  <th>Item Code</th>
+                  <th>Description</th>
+                  <th>Category</th>
+                  <th class="text-right">Selling</th>
+                  <th class="text-right">Invoice</th>
+                  <th class="text-right">Qty</th>
+                  <th class="text-center">Status</th>
+              </tr>
+          </thead>
+          <tbody>
+`;
+
+    data.forEach((item) => {
+      html += `
+              <tr class="item-row">
+                  <td><strong>${item.code || "-"}</strong></td>
+                  <td>${item.name || "-"}</td>
+                  <td>${item.category || "-"}</td>
+                  <td class="text-right">${
+                    item.list_price
+                      ? parseFloat(item.list_price).toFixed(2)
+                      : "0.00"
+                  }</td>
+                  <td class="text-right">${
+                    item.invoice_price
+                      ? parseFloat(item.invoice_price).toFixed(2)
+                      : "0.00"
+                  }</td>
+                  <td class="text-right">${
+                    item.quantity
+                      ? parseFloat(item.quantity).toFixed(2)
+                      : "0.00"
+                  }</td>
+                  <td class="text-center"><span style="padding: 4px 8px; border-radius: 3px; font-size: 11px; font-weight: 500; 
+                      background-color: ${
+                        item.stock_status === "Out of Stock"
+                          ? "#fee2e2"
+                          : item.stock_status === "Re-order"
+                          ? "#fef3c7"
+                          : "#dcfce7"
+                      }; 
+                      color: ${
+                        item.stock_status === "Out of Stock"
+                          ? "#991b1b"
+                          : item.stock_status === "Re-order"
+                          ? "#92400e"
+                          : "#166534"
+                      };">
+                      ${item.stock_status || "-"}
+                  </span></td>
+              </tr>`;
+
+      if (item.arn_lots && item.arn_lots.length > 0) {
+        html += `
+              <tr>
+                  <td colspan="7" class="arn-details">
+                      <div class="section-title">ARN Details</div>
+                      <table class="arn-table">
+                          <thead>
+                              <tr>
+                                  <th>ARN No</th>
+                                  <th class="text-right">Cost</th>
+                                  <th class="text-right">Qty</th>
+                                  <th class="text-right">Total Cost</th>
+                                  <th class="text-right">List Price</th>
+                                  <th class="text-right">Invoice</th>
+                                  <th class="text-right">Total</th>
+                              </tr>
+                          </thead>
+                          <tbody>`;
+
+        item.arn_lots.forEach((lot) => {
+          const cost = parseFloat(lot.cost || 0);
+          const qty = parseFloat(lot.qty || 0);
+          const listPrice = parseFloat(lot.list_price || 0);
+          const invoicePrice = parseFloat(lot.invoice_price || 0);
+
+          html += `
+                              <tr>
+                                  <td>${lot.arn_no || "-"}</td>
+                                  <td class="text-right">${cost.toFixed(2)}</td>
+                                  <td class="text-right">${qty.toFixed(2)}</td>
+                                  <td class="text-right">${(cost * qty).toFixed(
+                                    2
+                                  )}</td>
+                                  <td class="text-right">${listPrice.toFixed(
+                                    2
+                                  )}</td>
+                                  <td class="text-right">${invoicePrice.toFixed(
+                                    2
+                                  )}</td>
+                                  <td class="text-right"><strong>${(
+                                    invoicePrice * qty
+                                  ).toFixed(2)}</strong></td>
+                              </tr>`;
+        });
+
+        // Add ARN totals row
+        const totalQty = item.arn_lots.reduce(
+          (sum, lot) => sum + parseFloat(lot.qty || 0),
+          0
+        );
+        const totalValue = item.arn_lots.reduce((sum, lot) => {
+          return (
+            sum + parseFloat(lot.invoice_price || 0) * parseFloat(lot.qty || 0)
+          );
+        }, 0);
+
+        html += `
+                              <tr style="background-color: #f8f9fa; font-weight: 500;">
+                                  <td><strong>Total</strong></td>
+                                  <td></td>
+                                  <td class="text-right"><strong>${totalQty.toFixed(
+                                    2
+                                  )}</strong></td>
+                                  <td></td>
+                                  <td></td>
+                                  <td></td>
+                                  <td class="text-right"><strong>${totalValue.toFixed(
+                                    2
+                                  )}</strong></td>
+                              </tr>
+                          </tbody>
+                      </table>
+                  </td>
+              </tr>`;
+      }
+    });
+
+    html += `
+          </tbody>
+      </table>
+
+      <div class="summary">
+          <h3 style="margin-top: 0; color: #2c3e50;">Report Summary</h3>
+          <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 200px; margin: 5px 0;">
+                  <div style="font-size: 13px; color: #7f8c8d;">Total Items</div>
+                  <div style="font-size: 24px; font-weight: 600; color: #2c3e50;">${
+                    data.length
+                  }</div>
+              </div>
+              <div style="flex: 1; min-width: 200px; margin: 5px 0;">
+                  <div style="font-size: 13px; color: #7f8c8d;">Total Quantity</div>
+                  <div style="font-size: 24px; font-weight: 600; color: #2c3e50;">
+                      ${data
+                        .reduce(
+                          (sum, item) => sum + parseFloat(item.quantity || 0),
+                          0
+                        )
+                        .toFixed(2)}
+                  </div>
+              </div>
+              <div style="flex: 1; min-width: 200px; margin: 5px 0;">
+                  <div style="font-size: 13px; color: #7f8c8d;">Report Generated</div>
+                  <div style="font-size: 14px; font-weight: 500; color: #2c3e50;">${new Date().toLocaleString()}</div>
+              </div>
+          </div>
+      </div>
+
+      <div class="footer">
+          <p>This report was generated by the Live Stock Management System</p>
+          <p style="margin: 5px 0 0 0; font-size: 10px; color: #bdc3c7;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></p>
+      </div>
+
+      <script>
+          // Add page numbers
+          document.addEventListener('DOMContentLoaded', function() {
+              const totalPages = Math.ceil(document.getElementsByTagName('table').length / 2); // Adjust divisor based on content
+              document.querySelectorAll('.pageNumber').forEach(el => el.textContent = '1');
+              document.querySelectorAll('.totalPages').forEach(el => el.textContent = totalPages);
+          });
+      </script>
+  </body>
+  </html>`;
+
+    // Create a new window with the HTML content
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(html);
+    printWindow.document.close();
+
+    // Wait for content to load, then print (which will trigger PDF download in most browsers)
+    printWindow.onload = function () {
+      printWindow.print();
+      printWindow.onafterprint = function () {
+        printWindow.close();
+      };
+    };
+
+    showAlert(
+      "PDF export completed. Use browser print dialog to save as PDF.",
+      "success"
+    );
+  }
+
     // Initialize department select2 if it exists
     if ($.fn.select2) {
         $('#filter_department_id').select2({
