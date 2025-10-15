@@ -3,6 +3,7 @@ if (!isset($_SESSION)) {
     // Set session lifetime to 5 hours (in seconds = 18000)
     ini_set('session.gc_maxlifetime', 18000);   // server-side session data
     ini_set('session.cookie_lifetime', 18000);  // cookie lifetime in browser
+    ini_set('session.gc_probability', 0);       // disable garbage collection
     
     session_set_cookie_params(18000); // 5 hours
     session_start();
