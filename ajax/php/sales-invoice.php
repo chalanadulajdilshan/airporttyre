@@ -467,6 +467,9 @@ if (isset($_POST['action']) && $_POST['action'] == 'cancel') {
         $AUDIT_LOG->created_at = date("Y-m-d H:i:s");
         $result =   $AUDIT_LOG->create();
 
+        $CUSTOMER_MASTER = new CustomerMaster($SALES_INVOICE->customer_id);
+        $CUSTOMER_MASTER->updateCustomerOutstanding($SALES_INVOICE->customer_id, $SALES_INVOICE->grand_total, false);
+
         if ($result) {
             echo json_encode(['status' => 'success']);
         } else {
