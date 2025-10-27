@@ -126,10 +126,16 @@ $item_id = 'TI/0' . ($lastId + 1);
                                                     <select id="brand" name="brand" class="form-select">
 
                                                         <?php
+                                                        
                                                         $BRAND = new Brand(NULL);
                                                         foreach ($BRAND->activeBrands() as $brand) {
-                                                            echo "<option value='{$brand['id']}'>{$brand['name']}</option>";
+                                                            $BRANDCATEGORY = new BrandCategory($brand['category_id']);
+                                                            
+                                                           
+                                                            echo "<option value='{$brand['id']}'>{$brand['name']} - {$BRANDCATEGORY->name}</option>";
                                                         }
+
+
                                                         ?>
                                                     </select>
                                                 </div>
