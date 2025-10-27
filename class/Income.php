@@ -70,11 +70,20 @@ class Income
         return $array;
     }
 
-    public function totalIncome()
+    public function getTotalIncomeByDateRange($dateFrom, $dateTo)
     {
-        $query = "SELECT SUM(`amount`) AS total FROM `income`";
         $db = new Database();
+        $dateFrom = mysqli_real_escape_string($db->DB_CON, $dateFrom);
+        $dateTo = mysqli_real_escape_string($db->DB_CON, $dateTo);
+
+        $query = "SELECT COALESCE(SUM(amount), 0) as total_income 
+                 FROM `income` 
+                 WHERE date BETWEEN '$dateFrom' AND '$dateTo'";
+
         $result = mysqli_fetch_array($db->readQuery($query));
-        return $result ? $result['total'] : 0;
+
+        $totalIncome = isset($result['total_income']) ? (float)$result['total_income'] : 0;
+
+        return $totalIncome;
     }
 }
