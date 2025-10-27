@@ -217,7 +217,7 @@ include './auth.php';
                                                 </div>
                                             </div>
 
-                                            <div class="col-md-2">
+                                            <div class="col-md-3">
                                                 <label for="customerAddress" class="form-label">Customer
                                                     Address</label>
                                                 <div class="input-group mb-3">
@@ -234,15 +234,15 @@ include './auth.php';
                                                 </div>
                                             </div>
 
-                                            <div class="col-md-2">
-                                                <label for="recommendedPerson" class="form-label">Recommended Person</label>
+                                            <div class="col-md-2 hidden">
+                                                <label for="recommendedPerson" class="form-label ">Recommended Person</label>
                                                 <div class="input-group mb-3">
                                                     <input id="recommended_person" name="recommended_person" type="text"
                                                         class="form-control" placeholder="Enter Recommended Person">
                                                 </div>
                                             </div>
 
-                                            <div class="col-md-1">
+                                            <div class="col-md-1 hidden">
                                                 <label for="vat_type" class="form-label">Vat Type</label>
                                                 <div class="input-group mb-3">
                                                     <select id="vat_type" name="vat_type" class="form-select">
@@ -272,7 +272,7 @@ include './auth.php';
                                                 <input type="hidden" id="dag_id" name="dag_id" />
                                             </div>
 
-                                            <div class="col-md-2 ">
+                                            <div class="col-md-2 hidden">
                                                 <label for="quotationCode" class="form-label">Quotation ref No</label>
                                                 <div class="input-group mb-3">
                                                     <input id="quotation_ref_no" name="quotation_ref_no" type="text"
