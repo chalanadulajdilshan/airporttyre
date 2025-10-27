@@ -1539,14 +1539,14 @@ if ($("input[name='payment_type']:checked").val() === "2") {
       }
     });
 
-    if (alreadyExists) {
-      swal(
-        "Warning!",
-        "This item from the current ARN is already added.",
-        "warning"
-      );
-      return;
-    }
+    // if (alreadyExists) {
+    //   swal(
+    //     "Warning!",
+    //     "This item from the current ARN is already added.",
+    //     "warning"
+    //   );
+    //   return;
+    // }
 
     // Calculate total based on whether it's a service invoice or regular invoice
     let total;
