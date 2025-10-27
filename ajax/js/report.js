@@ -535,7 +535,7 @@ tbody += `<tr class="invoice-row ${rowClass}" data-id="${row.id}">
                     });
 
                     // Calculate final profit after expenses
-                    const finalProfit = totalProfit - totalExpenses;
+                    const finalProfit = (totalProfit+totalIncome) - totalExpenses;
 
                     // Add summary rows
                     tbody += `<tr style="font-weight:bold; background-color:#f8f9fa; border-top: 2px solid #dee2e6;">
