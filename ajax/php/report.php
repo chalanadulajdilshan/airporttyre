@@ -1,3 +1,4 @@
+
 <?php
 include_once '../../class/include.php';
 header('Content-Type: application/json');
@@ -40,6 +41,13 @@ if (isset($_POST['action']) && $_POST['action'] === 'load_profit_report') {
         // No need to set item_code here as we'll use item_name in the query
     }
 
+    // Calculate total income for the same date range
+    $totalIncome = 0;
+    if (!empty($filters['from_date']) && !empty($filters['to_date'])) {
+        $income = new Income(NULL);
+        $totalIncome = $income->getTotalIncomeByDateRange($filters['from_date'], $filters['to_date']);
+    }
+
     // Load profit data
     $salesInvoice = new SalesInvoice(NULL);
     $items = $salesInvoice->getProfitTable($filters);
@@ -51,10 +59,16 @@ if (isset($_POST['action']) && $_POST['action'] === 'load_profit_report') {
         $totalExpenses = $expense->getTotalExpensesByDateRange($filters['from_date'], $filters['to_date']);
     }
 
-    // Prepare response with both sales data and expense total
+    // Add income to each sales data row
+    foreach ($items as &$item) {
+        $item['income'] = $totalIncome;
+    }
+
+    // Prepare response with sales data, expense total, and income total
     $response = [
         'sales_data' => $items,
-        'total_expenses' => $totalExpenses
+        'total_expenses' => $totalExpenses,
+        'total_income' => $totalIncome
     ];
 
     // Output JSON
@@ -190,3 +204,4 @@ if (isset($_POST['action']) && $_POST['action'] === 'update_item_price') {
     }
     exit;
 }
+

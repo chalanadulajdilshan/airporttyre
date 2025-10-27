@@ -132,7 +132,7 @@ jQuery(document).ready(function () {
                     render: function(data) {
                         return parseFloat(data || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     }
-                },
+                }, 
                 { data: 'outstanding_settle_amount', visible: false } // hidden column
             ],
 
@@ -494,6 +494,7 @@ jQuery(document).ready(function () {
                 // Handle the new response structure
                 const data = response.sales_data || response; // Fallback for backward compatibility
                 const totalExpenses = parseFloat(response.total_expenses) || 0;
+                const totalIncome = parseFloat(response.total_income) || 0;
 
                 if (data.length > 0) {
                     $.each(data, function (index, row) {
@@ -546,6 +547,14 @@ tbody += `<tr class="invoice-row ${rowClass}" data-id="${row.id}">
             </td>
         </tr>`;
 
+                    // Add income row
+                    tbody += `<tr style="font-weight:bold; background-color:#e6f3ff; border: 1px solid #b3d7ff;">
+            <td colspan="10" class="text-end">Total Income</td>
+            <td style="color: #007bff;">
+                ${totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </td>
+        </tr>`;
+
                     // Add expense row
                     tbody += `<tr style="font-weight:bold; background-color:#fff3cd; border: 1px solid #ffeaa7;">
             <td colspan="10" class="text-end">Total Expenses</td>
@@ -562,7 +571,7 @@ tbody += `<tr class="invoice-row ${rowClass}" data-id="${row.id}">
             </td>
         </tr>`;
                 } else {
-                    tbody = `<tr><td colspan="11" class="text-center text-muted">No profit data found</td></tr>`;
+                    tbody = `<tr><td colspan="12" class="text-center text-muted">No profit data found</td></tr>`;
                 }
 
                 $('#profitReport tbody').html(tbody);
@@ -578,7 +587,7 @@ tbody += `<tr class="invoice-row ${rowClass}" data-id="${row.id}">
             },
             error: function (xhr, status, error) {
                 console.error('Error loading profit report:', error);
-                $('#profitReport tbody').html(`<tr><td colspan="11" class="text-danger text-center">Error loading profit report</td></tr>`);
+                $('#profitReport tbody').html(`<tr><td colspan="12" class="text-danger text-center">Error loading profit report</td></tr>`);
             }
         });
     }
@@ -590,3 +599,13 @@ tbody += `<tr class="invoice-row ${rowClass}" data-id="${row.id}">
     });
 
 });
+
+
+
+
+
+
+
+
+
+
