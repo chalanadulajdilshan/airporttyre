@@ -110,7 +110,7 @@ $CUSTOMER_MASTER = new CustomerMaster($SALES_INVOICE->customer_id);
         }
     </style>
 
-</head
+    </head>
 
     <body data-layout="horizontal" data-topbar="colored">
 
@@ -170,7 +170,7 @@ $CUSTOMER_MASTER = new CustomerMaster($SALES_INVOICE->customer_id);
                             <thead>
                                 <tr>
                                     <th>No.</th>
-                                    <th colspan="4">Item Name</th>
+                                    <th colspan="4" style="width: 60%;">Item Name</th>
                                     <th>Selling Price</th>
                                     <th>Qty</th>
                                     <th class="text-end">Total</th>
@@ -197,7 +197,7 @@ $CUSTOMER_MASTER = new CustomerMaster($SALES_INVOICE->customer_id);
                                 ?>
                                     <tr>
                                         <td>0<?php echo $key; ?></td>
-                                        <td colspan="4"><?php echo $ITEM_MASTER->code . ' ' . $temp_items['display_name']; ?>
+                                        <td colspan="4" ><?php echo $ITEM_MASTER->code . ' ' . $temp_items['display_name']; ?>
                                         <?php if (!empty($temp_items['next_service_date']) && $temp_items['next_service_date'] !== '0000-00-00' && strtotime($temp_items['next_service_date']) > 0): ?>
                                             <br><strong>Next Service Date:</strong> <?php echo date('d M, Y', strtotime($temp_items['next_service_date'])); ?>
                                         <?php elseif (!empty($temp_items['current_km'])): ?>

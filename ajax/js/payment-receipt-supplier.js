@@ -833,7 +833,6 @@ jQuery(document).ready(function ($) {
     
     formData.append("create", true);
     formData.append("action", "create");
-
     $.ajax({
       url: "ajax/php/payment-receipt-supplier.php",
       type: "POST",
