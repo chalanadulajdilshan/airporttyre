@@ -22,6 +22,8 @@ if (isset($_POST['create'])) {
     $RECEIPT->entry_date   = $_POST['entry_date'];
     $RECEIPT->amount_paid  = $_POST['paid_amount'];
     $RECEIPT->remark       = $_POST['remark'];
+    var_dump($_POST['methods']);
+    exit();
 
     $res = $RECEIPT->create();
 
@@ -47,6 +49,8 @@ if (isset($_POST['create'])) {
 
                     // Update invoice outstanding if invoice_id is provided
                     if (!empty($PAYMENT_RECEIPT_METHOD_SUPPLIER->invoice_id)) {
+                        var_dump($PAYMENT_RECEIPT_METHOD_SUPPLIER->invoice_id);
+                        exit();
                         $ARN = new ARNMaster(null);
                         $ARN->updateInvoiceOutstanding($PAYMENT_RECEIPT_METHOD_SUPPLIER->invoice_id, $PAYMENT_RECEIPT_METHOD_SUPPLIER->amount);
 
@@ -60,7 +64,7 @@ if (isset($_POST['create'])) {
             }
         } else {
             // Fallback to old format for backward compatibility
-            // var_dump($_POST['cheque_no']);
+            
             foreach ($_POST['invoice_id'] as $index => $invoice_id) {
                 // Get the payment amounts for this invoice and ensure they are floats
                 $chequePay = isset($_POST['cheque_pay'][$index]) ? floatval(str_replace(',', '', $_POST['cheque_pay'][$index])) : 0.0;

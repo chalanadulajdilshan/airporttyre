@@ -12,7 +12,7 @@ class Database
         if ($this->isLocalServer()) {
             // Local DB settings
             $this->host = 'localhost';
-            $this->name = 'dstyre';
+            $this->name = 'airporttyre';
             $this->user = 'root';
             $this->password = '';
         } else {

@@ -225,7 +225,8 @@ $arn_id = $COMPANY_PROFILE_DETAILS->company_code . '/ARN/00/' . ($lastId + 1);
                                                         <?php
                                                         $BRAND = new Brand(NULL);
                                                         foreach ($BRAND->activeBrands() as $brand) {
-                                                            echo "<option value='{$brand['id']}'>{$brand['name']}</option>";
+                                                            $BRANDCATEGORY = new BrandCategory($brand['category_id'] ?? NULL);
+                                                            echo "<option value='{$brand['id']}'>{$brand['name']} - {$BRANDCATEGORY->name}</option>";
                                                         }
                                                         ?>
                                                     </select>
