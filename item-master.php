@@ -62,6 +62,10 @@ $item_id = 'TI/0' . ($lastId + 1);
                                     <i class="uil uil-trash-alt me-1"></i> Delete
                                 </a>
                             <?php endif; ?>
+                            
+                            <a href="item-master-print.php" id="print" target="_blank" class="btn btn-info">
+                                <i class="uil uil-file-download-alt me-1"></i> Download PDF
+                            </a>
                         </div>
 
                         <div class="col-md-4 text-md-end text-start mt-3 mt-md-0">
