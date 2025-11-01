@@ -109,6 +109,9 @@ if (isset($_POST['create'])) {
     // Attempt to create the item
     $res = $ITEM->create();
 
+      $DOCUMENT_TRACKING = new DocumentTracking(null);
+    $DOCUMENT_TRACKING->incrementDocumentId('item');
+    
     //audit log
     $AUDIT_LOG = new AuditLog(NUll);
     $AUDIT_LOG->ref_id = $res;
