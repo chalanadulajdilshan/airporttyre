@@ -171,19 +171,18 @@ if ($result) {
                         <th>Category</th>
                         <th>Group</th>
                         <th>Size</th>
-                        <th>Pattern</th>
-                        <th class="text-end">List Price</th>
-                        <th class="text-center">Discount %</th>
+                        <th>Pattern</th> 
                         <th class="text-end">Selling Price</th>
-                        <th>Stock Type</th>
-                        <th class="text-center">Re-order Level</th>
-                        <th class="text-center">Re-order Qty</th>
-                        <th class="text-center">Status</th>
+                        <th>Qty</th>  
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (count($items) > 0): ?>
-                        <?php foreach ($items as $index => $item): ?>
+                        <?php foreach ($items as $index => $item): 
+                            $STOCK_MASTER = new StockMaster(NULL);
+                            $total_qty = $STOCK_MASTER->getTotalAvailableQuantity($item['id']);
+                            ?>
+                            
                             <tr>
                                 <td class="text-center"><?php echo $index + 1; ?></td>
                                 <td><?php echo htmlspecialchars($item['code']); ?></td>
@@ -193,30 +192,20 @@ if ($result) {
                                 <td><?php echo htmlspecialchars($item['group_name'] ?? '-'); ?></td>
                                 <td><?php echo htmlspecialchars($item['size'] ?? '-'); ?></td>
                                 <td><?php echo htmlspecialchars($item['pattern'] ?? '-'); ?></td>
-                                <td class="text-end"><?php echo number_format($item['list_price'], 2); ?></td>
-                                <td class="text-center"><?php echo number_format($item['discount'], 2); ?>%</td>
                                 <td class="text-end"><?php echo number_format($item['invoice_price'], 2); ?></td>
-                                <td><?php echo htmlspecialchars($item['stock_type_name'] ?? '-'); ?></td>
-                                <td class="text-center"><?php echo $item['re_order_level'] ?? '-'; ?></td>
-                                <td class="text-center"><?php echo $item['re_order_qty'] ?? '-'; ?></td>
-                                <td class="text-center">
-                                    <?php if ($item['is_active'] == 1): ?>
-                                        <span class="badge bg-success">Active</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-danger">Inactive</span>
-                                    <?php endif; ?>
-                                </td>
+                                <td><?php echo htmlspecialchars($total_qty); ?></td>
+                                 
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="15" class="text-center">No items found</td>
+                            <td colspan="10" class="text-center">No items found</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="15" class="text-center">
+                        <td colspan="10" class="text-center">
                             <strong>Total Items: <?php echo count($items); ?></strong>
                         </td>
                     </tr>
