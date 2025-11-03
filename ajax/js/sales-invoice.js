@@ -334,7 +334,7 @@ jQuery(document).ready(function () {
 
   function addServiceItem() {
     $(
-      "#itemCode, #itemName, #itemPrice,#item_cost_arn, #itemQty, #itemDiscount, #item_id, #itemSalePrice"
+      "#itemCode, #itemName, #itemPrice,#item_cost_arn, #temDiscount, #item_id, #itemSalePrice"
     ).val("");
     // Show the searchable dropdown
     $("#serviceItemTable").slideDown().focus(); // nicer animation than .show()

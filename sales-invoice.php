@@ -346,7 +346,7 @@ include './auth.php';
                                                 </div>
                                                 <div class="col-md-1">
                                                     <label class="form-label">Qty</label>
-                                                    <input type="number" id="itemQty" class="form-control"
+                                                    <input type="number" id="itemQty" class="form-control" value="1"
                                                         placeholder="Qty" oninput="calculatePayment()">
                                                 </div>
                                                 <div class="col-md-1">
@@ -381,15 +381,15 @@ include './auth.php';
                                                 </div>
 
                                                 <!-- Service Extra Details (Vehicle No & Current KM) -->
-                                                <div class="col-md-2" id="serviceExtraDetails" style="display: none;">
+                                                <div class="col-md-2"   style="display: none;">
 
                                                     <input type="text" id="vehicleNo" class="form-control" placeholder="Enter Vehicle No">
                                                 </div>
-                                                <div class="col-md-2" id="serviceKmDetails" style="display: none;">
+                                                <div class="col-md-2"   style="display: none;">
 
                                                     <input type="number" id="currentKm" class="form-control" placeholder="Enter Current KM">
                                                 </div>
-                                                <div class="col-md-2" id="serviceNextServiceDetails" style="display: none;">
+                                                <div class="col-md-2"  style="display: none;">
 
                                                     <input type="number" id="nextServiceDays" class="form-control" placeholder="Enter Days for Next Service">
                                                 </div>
